@@ -2,6 +2,7 @@
 // https://docs.swift.org/swift-book
 import SwiftUI
 import Charts
+import UIKit
 
 public struct ChartView: View {
     public var body: some View {
