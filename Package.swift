@@ -6,8 +6,7 @@ import PackageDescription
 let package = Package(
     name: "Charty",
     platforms: [
-        .iOS(.v13),
-        .macOS(.v13)
+        .iOS(.v17)
     ],
     products: [
         .library(
@@ -15,13 +14,13 @@ let package = Package(
             targets: ["Charty"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hassanbsc/Charty.git", from: "5.0.0")
+        .package(url: "https://github.com/ChartsOrg/Charts.git", from: "5.1.0")
     ],
     targets: [
         .target(
             name: "Charty",
             dependencies: [
-                .product(name: "Charts", package: "Charts")
+                .product(name: "DGCharts", package: "Charts")
             ]),
         .testTarget(
             name: "ChartyTests",
