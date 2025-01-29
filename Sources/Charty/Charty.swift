@@ -10,13 +10,13 @@ struct Profit: Identifiable {
 
 // Sample Data
 let data: [Profit] = [
-    Profit(department: "Production", profit: 15000),
-    Profit(department: "Production\\margin", profit: 1300),
-    Profit(department: "Production\\margin\\sublevel1", profit: 500),
-    Profit(department: "Production\\margin\\sublevel2", profit: 800),
-    Profit(department: "Production\\margin\\sublevel2\\subsublevel1", profit: 300),
-    Profit(department: "Marketing", profit: 8000),
-    Profit(department: "Finance", profit: 10000)
+    Profit(department: "Production", profit: 0), // Parent node, no value
+    Profit(department: "Production\\margin", profit: 0), // Parent node, no value
+    Profit(department: "Production\\margin\\sublevel1", profit: 500), // Leaf node
+    Profit(department: "Production\\margin\\sublevel2", profit: 800), // Leaf node
+    Profit(department: "Production\\margin\\sublevel2\\subsublevel1", profit: 300), // Leaf node
+    Profit(department: "Marketing", profit: 8000), // Leaf node
+    Profit(department: "Finance", profit: 10000) // Leaf node
 ]
 
 // Main Chart View
@@ -29,7 +29,7 @@ public struct ChartView: View {
             Text(currentDepartment ?? "All Departments")
                 .font(.title)
                 .padding()
-            Text("\(filteredData.count)")
+            
             Chart(filteredData, id: \.department) { profit in
                 BarMark(
                     x: .value("Department", profit.department.components(separatedBy: "\\").last ?? profit.department),
@@ -71,10 +71,24 @@ public struct ChartView: View {
     private var filteredData: [Profit] {
         if let currentDepartment = currentDepartment {
             // Filter data to include only direct sublevels of the current department
-            return data.filter { $0.department.hasPrefix(currentDepartment + "\\") && $0.department.components(separatedBy: "\\").count == currentDepartment.components(separatedBy: "\\").count + 1 }
+            let sublevels = data.filter { $0.department.hasPrefix(currentDepartment + "\\") && $0.department.components(separatedBy: "\\").count == currentDepartment.components(separatedBy: "\\").count + 1 }
+            
+            // Calculate the sum of leaf nodes for each sublevel
+            return sublevels.map { sublevel in
+                let leafNodes = data.filter { $0.department.hasPrefix(sublevel.department + "\\") }
+                let totalProfit = leafNodes.isEmpty ? sublevel.profit : leafNodes.reduce(0) { $0 + $1.profit }
+                return Profit(department: sublevel.department, profit: totalProfit)
+            }
         } else {
             // Show top-level departments
-            return data.filter { !$0.department.contains("\\") }
+            let topLevels = data.filter { !$0.department.contains("\\") }
+            
+            // Calculate the sum of leaf nodes for each top-level department
+            return topLevels.map { topLevel in
+                let leafNodes = data.filter { $0.department.hasPrefix(topLevel.department + "\\") }
+                let totalProfit = leafNodes.isEmpty ? topLevel.profit : leafNodes.reduce(0) { $0 + $1.profit }
+                return Profit(department: topLevel.department, profit: totalProfit)
+            }
         }
     }
     
