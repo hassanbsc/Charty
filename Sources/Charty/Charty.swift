@@ -14,6 +14,7 @@ let data: [Profit] = [
     Profit(department: "Production\\margin", profit: 1300),
     Profit(department: "Production\\margin\\sublevel1", profit: 500),
     Profit(department: "Production\\margin\\sublevel2", profit: 800),
+    Profit(department: "Production\\margin\\sublevel2\\subsublevel1", profit: 300),
     Profit(department: "Marketing", profit: 8000),
     Profit(department: "Finance", profit: 10000)
 ]
@@ -28,7 +29,7 @@ public struct ChartView: View {
             Text(currentDepartment ?? "All Departments")
                 .font(.title)
                 .padding()
-            
+            Text("\(filteredData.count)")
             Chart(filteredData, id: \.department) { profit in
                 BarMark(
                     x: .value("Department", profit.department.components(separatedBy: "\\").last ?? profit.department),
@@ -38,11 +39,10 @@ public struct ChartView: View {
             }
             .chartXSelection(value: $selectedDepartment) // Enable X-axis selection
             .onChange(of: selectedDepartment) {
-                if let selectedDepartment {
+                if let newSelection = selectedDepartment,
+                   hasSublevels(currentDepartment == nil ? newSelection : (currentDepartment ?? "") + "\\" + newSelection) {
                     // Drill down into the selected department
-                    if hasSublevels(selectedDepartment) {
-                        currentDepartment = selectedDepartment
-                    }
+                    currentDepartment = currentDepartment == nil ? newSelection : (currentDepartment ?? "") + "\\" + newSelection
                 }
             }
             .frame(height: 300)
@@ -70,8 +70,8 @@ public struct ChartView: View {
     // Filter data based on the current department level
     private var filteredData: [Profit] {
         if let currentDepartment = currentDepartment {
-            // Filter data to include only sublevels of the current department
-            return data.filter { $0.department.hasPrefix(currentDepartment + "\\") || $0.department == currentDepartment }
+            // Filter data to include only direct sublevels of the current department
+            return data.filter { $0.department.hasPrefix(currentDepartment + "\\") && $0.department.components(separatedBy: "\\").count == currentDepartment.components(separatedBy: "\\").count + 1 }
         } else {
             // Show top-level departments
             return data.filter { !$0.department.contains("\\") }
