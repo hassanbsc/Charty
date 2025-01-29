@@ -1,9 +1,5 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-import DGCharts
 import SwiftUI
 import Charts
-
 
 // Data Model
 struct Profit: Identifiable {
@@ -23,8 +19,9 @@ let data: [Profit] = [
 ]
 
 // Main Chart View
-public struct DrillDownChartView: View {
+public struct ChartView: View {
     @State private var currentDepartment: String? = nil // Track the current department level
+    @State private var selectedDepartment: String? = nil // Track the selected department for drill-down
     
     public var body: some View {
         VStack {
@@ -32,20 +29,22 @@ public struct DrillDownChartView: View {
                 .font(.title)
                 .padding()
             
-            Chart(filteredData) { profit in
+            Chart(filteredData, id: \.department) { profit in
                 BarMark(
                     x: .value("Department", profit.department.components(separatedBy: "\\").last ?? profit.department),
                     y: .value("Profit", profit.profit)
                 )
                 .foregroundStyle(by: .value("Department", profit.department))
-//                .onTapGesture {
-//                    // Drill down into the selected department
-//                    if hasSublevels(profit.department) {
-//                        currentDepartment = profit.department
-//                    }
-//                }
             }
-            .chartXSelection(value: $currentDepartment)
+            .chartXSelection(value: $selectedDepartment) // Enable X-axis selection
+            .onChange(of: selectedDepartment) {
+                if let selectedDepartment {
+                    // Drill down into the selected department
+                    if hasSublevels(selectedDepartment) {
+                        currentDepartment = selectedDepartment
+                    }
+                }
+            }
             .frame(height: 300)
             .padding()
             
@@ -61,6 +60,7 @@ public struct DrillDownChartView: View {
                             currentDepartment = nil // Go back to the top level
                         }
                     }
+                    selectedDepartment = nil // Reset selection
                 }
                 .padding()
             }
@@ -87,6 +87,6 @@ public struct DrillDownChartView: View {
 // Preview
 struct ChartView_Previews: PreviewProvider {
     static var previews: some View {
-        DrillDownChartView()
+        ChartView()
     }
 }
